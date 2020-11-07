@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <style>
+        body { margin:20px;position:fixed;top:0;right:0;bottom:0;left:0; }
+        #canvasExample, #svgExample {
+            position:relative;
+            width:100%;
+        }
+    </style>
+</head>
+
+<body>
+<p>Here is an example of drawing 100 000 lines with svg vs canvas</p>
+<h2>SVG</h2>
+<button id="btnSVG">Draw with svg</button> <p id="svgTime"></p>
+<div id="svgExample"></div>
+
+
+
+
+
+
+
+<h2>Canvas</h2>
+<button id="btnCanvas">Draw with canvas</button> <p id="canvasTime"></p>
+<div id="canvasExample"></div>
+<script>
+
+    // ******************** Globals ************************
+    var x = d3.scaleLinear().domain([-1, 1]).range([20, 500]);
+
+    var steps = 5
+    //Discrete diverging scale
+    var color_threshold = d3.scaleThreshold()
+        .domain(d3.range(-1 + 2/steps, 1, 2/steps) ) //[-.6, -.2, .2, .6]
+        .range(d3.schemePuOr[steps]); //=> 5 colors in an array
+
+    //Continuous diverging scale
+    var color_sequential = d3.scaleSequential(d3.interpolatePuOr)
+        .domain([-1, 1]);
+
+
+    function drawWithCanvas() {
+        //Cleanup
+        d3.select("#canvasExample").select("svg").remove();
+        d3.select("#canvasExample").select("canvas").remove();
+        // Background canvas for quick drawing of 2k lines
+        var canvas = d3.select("#canvasExample").append("canvas")
+            .attr("width", 960)
+            .attr("height", 100);
+        var ctx = canvas.node().getContext("2d");
+        //Translucent svg on top to show the axis
+        var svg = d3.select("#canvasExample").append("svg")
+            .attr("width", 960)
+            .attr("height", 100)
+            .style("position", "absolute")
+            .style("top", 0)
+            .style("left", 0);
+
+        // Let's add an axis
+        svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0, 50)")
+            .call(d3.axisTop(x));
+
+
+
+        // Let's draw 20000 lines on canvas for speed
+        d3.range(-1, 1, 0.00001)
+            .forEach(function (d) {
+                ctx.beginPath();
+                ctx.strokeStyle = color_threshold(d);
+                ctx.moveTo(x(d), 50);
+                ctx.lineTo(x(d), 70);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.strokeStyle = color_sequential(d);
+                ctx.moveTo(x(d), 80);
+                ctx.lineTo(x(d), 100);
+                ctx.stroke();
+            });
+    } // drawWithCanvas
+
+
+    function drawWithSVG() {
+        d3.select("#svgExample").select("svg").remove();
+        var svg = d3.select("#svgExample").append("svg")
+            .attr("width", 960)
+            .attr("height", 100);
+
+        // Let's add an axis
+        svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0, 50)")
+            .call(d3.axisTop(x));
+
+
+        var line = d3.line();
+
+        var gStep = svg.append("g");
+        var gSeq = svg.append("g");
+
+        // Let's draw 20000 lines with svg
+        gStep.selectAll("path")
+            .data(d3.range(-1, 1, 0.00001))
+            .enter()
+            .append("path")
+            .attr("d", function (d) {
+                return line([[x(d), 50], [x(d), 70]]);
+            })
+            .style("stroke", color_threshold);
+
+        gSeq.selectAll("path")
+            .data(d3.range(-1, 1, 0.0001))
+            .enter()
+            .append("path")
+            .attr("d", function (d) {
+                return line([[x(d), 80], [x(d), 100]]);
+            })
+            .style("stroke", color_sequential);
+
+    } // drawWithSVG
+
+
+
+    // Setup buttons
+    d3.select("#btnCanvas").on("click", function () {
+
+        var t0 = performance.now();
+        drawWithCanvas();
+        var t1 = performance.now();
+        d3.select("#canvasTime").text("Drawing on canvas took " + (t1 - t0) + " milliseconds.")
+
+    } );
+    d3.select("#btnSVG").on("click",  function () {
+
+        var t0 = performance.now();
+        drawWithSVG();
+        var t1 = performance.now();
+        d3.select("#svgTime").text("Drawing on SVG took " + (t1 - t0) + " milliseconds.");
+
+    });
+
+</script>
+</body>
