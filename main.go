@@ -12,11 +12,9 @@ func main() {
 	router.ServeFiles("/css/*filepath", http.Dir("css"))
 	router.ServeFiles("/data/*filepath", http.Dir("data"))
 	router.GET("/", home)
-
 	_ = http.ListenAndServe(":80", router)
 }
 
-
 func home(writer http.ResponseWriter, request *http.Request, _ httprouter.Params) {
-http.ServeFile(writer, request, "./html/index.html")
+	http.ServeFile(writer, request, "./html/index.html")
 }
