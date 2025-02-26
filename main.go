@@ -1,20 +1,29 @@
 package main
 
 import (
-	"github.com/julienschmidt/httprouter"
+	"fmt"
+	"html/template"
 	"net/http"
+	"os"
 )
 
 func main() {
-	router := httprouter.New()
-	router.ServeFiles("/js/*filepath", http.Dir("js"))
-	router.ServeFiles("/html/*filepath", http.Dir("html"))
-	router.ServeFiles("/css/*filepath", http.Dir("css"))
-	router.ServeFiles("/data/*filepath", http.Dir("data"))
-	router.GET("/", home)
-	_ = http.ListenAndServe(":80", router)
+	http.Handle("/html/", http.StripPrefix("/html/", http.FileServer(http.Dir("html"))))
+	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("js"))))
+	http.Handle("/svg/", http.StripPrefix("/svg/", http.FileServer(http.Dir("svg"))))
+	http.HandleFunc("/", home)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		os.Exit(-1)
+	}
 }
 
-func home(writer http.ResponseWriter, request *http.Request, _ httprouter.Params) {
-	http.ServeFile(writer, request, "./html/index.html")
+func home(writer http.ResponseWriter, request *http.Request) {
+	tmpl := template.Must(template.ParseFiles("./html/home.html"))
+	err := tmpl.Execute(writer, nil)
+	if err != nil {
+		return
+	}
+	fmt.Print("home page loaded")
 }
