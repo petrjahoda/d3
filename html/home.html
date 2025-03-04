@@ -3,11 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="../css/home.css">
-    <script src="/js/d3.v7.min.js" defer></script>
-    <script src="/js/home.js" defer></script>
-    <title>Title</title>
+    <script src="../js/d3.v7.min.js" defer></script>
+    <script src="../js/home.js" defer></script>
+    <title>D3</title>
 </head>
-<body>
-<svg id="svg"></svg>
+<body style="margin: 0">
+<div style="display: none">
+    <svg viewBox="0 0 400 400" style="border: 1px solid black">
+        <rect x="100" y="100" width="200px" height="200px" stroke="black" stroke-width="5" fill="none"/>
+        <circle r="100" cx="200" cy="200" fill="plum"/>
+        <line x1="100" y1="100" x2="300" y2="300" stroke="black" stroke-width="5"/>
+        <line x1="100" y1="300" x2="300" y2="100" stroke="black" stroke-width="5"/>
+        <text x="200" y="100" text-anchor="middle" dy="-.35em" style="font-family: sans-serif;font-size: 18px">
+            SVG is awesome!
+        </text>
+    </svg>
+</div>
+<div id="container" style="width:80%;border: 1px dashed red;margin: auto">
+
+</div>
 </body>
 </html>

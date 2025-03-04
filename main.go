@@ -25,5 +25,5 @@ func home(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		return
 	}
-	fmt.Print("home page loaded")
+	fmt.Println("home page loaded")
 }
