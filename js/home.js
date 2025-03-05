@@ -1,47 +1,66 @@
-// const rect = svg.append("rect")
-//                 .attr("x", 10)
-//                 .attr("y", 10)
-//                 .attr("width", container.node().getBoundingClientRect().width * 0.8)
-//                 .attr("height", 14)
-//                 .attr("fill", "steelblue");
-//
-// window.addEventListener("resize", () => {
-//     rect.attr("width", container.node().getBoundingClientRect().width * 0.8);
-// });
+let chartData;
+const container = d3.select("#container")
+
 
 
 fetch("/d3_data", {
     method: "POST", headers: {'Content-Type': 'application/json'}
 }).then(response => response.json().then(data => {
-    const container = d3.select("#container");
+    chartData = data;
+    updateChart()
+    window.addEventListener("resize", updateChart);
+})).catch((e) => console.error(e))
+
+function updateChart() {
+    const leftMargin = 150
+    const rightMargin = 50
+    const barHeight = 25
+    container.selectAll("*").remove()
     const svg = container.append("svg")
                          .attr("width", "100%")
-                         .attr("height", "100%")
-    let barHeight = 14;
-    let maxBarWidth = container.node().getBoundingClientRect().width
-    // console.log(data);
-    // console.log(d3.max(data["Data"], d => d["Age"]))
-    // console.log(d3.min(data["Data"], d => d["Age"]))
-    // console.log(d3.extent(data["Data"], d => d["Age"]))
-    // console.log(d3.max(data["Data"], d => d["Height"]))
-    // console.log(d3.min(data["Data"], d => d["Height"]))
-    // console.log(d3.extent(data["Data"], d => d["Height"]))
-    // const ages = d3.group(data["Data"], (d) => d["Age"]);
-    // ages.forEach((d, i) => {
-    //     console.log(i);
-    //     d.forEach(e => console.log("\t"+e["Name"]))
-    // })
-    // const heights = d3.group(data["Data"], (d) => d["Height"]);
-    // heights.forEach((d, i) => {
-    //     console.log(i);
-    //     d.forEach(e => console.log("\t"+e["Name"]))
-    // })
-    svg.selectAll("rect")
-       .data(data["Data"])
-       .join("rect")
-       .attr("x", 0)
-       .attr("y", (d, i) => (barHeight + 5) * i)
-       .attr("width", d => maxBarWidth / 100 * d["Age"])
-       .attr("height", barHeight)
-       .attr("fill", d => d["Color"])
-})).catch((e) => console.error(e))
+                         .attr("height", barHeight * chartData["Data"].length)
+                         .attr("top", "10px")
+    const xScale = d3.scaleLinear()
+                     .domain([0, d3.max(chartData["Data"], d => d["Age"])])
+                     .range([0, container.node().getBoundingClientRect().width - leftMargin - rightMargin])
+
+    const yScale = d3.scaleBand()
+                     .domain(chartData["Data"].map(d => d["Name"]))
+                     .range([0, barHeight * chartData["Data"].length])
+                     .paddingInner(0.1)
+    const barAndLabel = svg.selectAll("g")
+                           .data(chartData["Data"])
+                           .join("g")
+                           .attr("transform", d => `translate(0, ${yScale(d["Name"])})`)
+
+    barAndLabel.append("rect")
+               .attr("x", leftMargin)
+               .attr("y", 0)
+               .attr("width", d => xScale(d["Age"]))
+               .attr("height", yScale.bandwidth())
+               .attr("fill", d => d["Color"])
+               .attr("data-name", d => d["Name"])
+
+
+    barAndLabel.append("text")
+               .text(d => d["Name"])
+               .attr("x", leftMargin - 10)
+               .attr("y", barHeight / 2 + 2.5)
+               .attr("text-anchor", "end")
+               .attr("font-family", "sans-serif")
+               .attr("font-size", "12px")
+    barAndLabel.append("text")
+               .text(d => d["Age"])
+               .attr("x", d => xScale(d["Age"]) + leftMargin + 10)
+               .attr("y", barHeight / 2 + 2.5)
+               .attr("font-family", "sans-serif")
+               .attr("font-size", "12px")
+    svg.append("line")
+       .attr("x1", leftMargin)
+       .attr("y1", 0)
+       .attr("x2", leftMargin)
+       .attr("y2", barHeight * chartData["Data"].length)
+       .attr("stroke", "black")
+       .attr("stroke-width", 1);
+}
+
