@@ -13,6 +13,7 @@ func main() {
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("js"))))
 	http.Handle("/svg/", http.StripPrefix("/svg/", http.FileServer(http.Dir("svg"))))
 	http.HandleFunc("/", home)
+	http.HandleFunc("/d3_data", d3Data)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		os.Exit(-1)
