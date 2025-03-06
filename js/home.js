@@ -6,11 +6,11 @@ fetch("/d3_data", {
     method: "POST", headers: {'Content-Type': 'application/json'}
 }).then(response => response.json().then(data => {
     chartData = data;
-    updateChart()
-    window.addEventListener("resize", updateChart);
+    drawBarChart()
+    window.addEventListener("resize", drawBarChart);
 })).catch((e) => console.error(e))
 
-function updateChart() {
+function drawBarChart() {
 
     // create constants for chart
     const barHeight = 30
@@ -35,20 +35,16 @@ function updateChart() {
                      .domain([0, d3.max(chartData["Data"], d => d["Age"])])
                      .range([0, innerWidth])
                      .nice()
-
     const yScale = d3.scaleBand()
                      .domain(chartData["Data"].map(d => d["Name"]))
                      .range([0, barHeight * chartData["Data"].length])
                      .paddingInner(0.1)
 
-    // create axis from scales
+    // create and append axis from scales
     const xAxis = d3.axisBottom(xScale)
                     .tickFormat(d => d + " let");
-    const yAxis= d3.axisLeft(yScale)
+    const yAxis = d3.axisLeft(yScale)
                     .tickSize(0)
-
-
-
     chart.append("g")
          .attr("transform", `translate(0, -30)`)
          .call(xAxis)
@@ -79,17 +75,15 @@ function updateChart() {
          .attr("fill", "white")
          .attr("alignment-baseline", "middle");
 
-    // Draw vertical grid lines using xScale ticks
+    // draw vertical grid lines
     chart.selectAll(".grid-line")
-              .data(xScale.ticks())
-              .join("line")
-              .attr("class", "grid-line")
-              .attr("x1", d => xScale(d))
-              .attr("y1", 0)
-              .attr("x2", d => xScale(d))
-              .attr("y2", innerHeight)
-              .attr("stroke", "hsla(215, 12%, 15%, 0.2)")
-              .attr("stroke-dasharray", "4,4");
-
-
+         .data(xScale.ticks())
+         .join("line")
+         .attr("class", "grid-line")
+         .attr("x1", d => xScale(d))
+         .attr("y1", 0)
+         .attr("x2", d => xScale(d))
+         .attr("y2", innerHeight)
+         .attr("stroke", "hsla(215, 12%, 15%, 0.2)")
+         .attr("stroke-dasharray", "4,4");
 }
