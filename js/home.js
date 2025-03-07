@@ -113,11 +113,14 @@ function drawLineChart() {
                     .duration(100)
                     .style("opacity", 0.9);
              tooltip.html(
-                 `<strong>Time:</strong> ${d3.timeFormat("%H:%M:%S")(new Date(d["Time"]))}<br/>
+                 `<strong>Time:</strong> ${d3.timeFormat("%H:%M:%S")(new Date(d["Time"]))}
                   <strong>Value:</strong> ${d["Value"]}`)
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 25) + "px");
+                    .style("left", event.pageX + "px")
+                    .style("top", event.pageY + "px")
+                 // Use transform to center the tooltip relative to mouse pointer
+                    .style("transform", "translate(-50%, -100%)");
          })
+
          .on("mouseout", () => {
              tooltip.transition()
                     .duration(100)
