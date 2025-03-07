@@ -4,14 +4,13 @@ const barChartContainer = d3.select("#bar-chart-container")
 const lineChartContainer = d3.select("#line-chart-container")
 
 
-// fetch("/d3_bar_chart_data", {
-//     method: "POST", headers: {'Content-Type': 'application/json'}
-// }).then(response => response.json().then(data => {
-//     barChartData = data;
-//     drawBarChart()
-//     drawLineChart()
-//     window.addEventListener("resize", drawBarChart);
-// })).catch((e) => console.error(e))
+fetch("/d3_bar_chart_data", {
+    method: "POST", headers: {'Content-Type': 'application/json'}
+}).then(response => response.json().then(data => {
+    barChartData = data;
+    drawBarChart()
+    window.addEventListener("resize", drawBarChart);
+})).catch((e) => console.error(e))
 
 
 fetch("/d3_line_chart_data", {
@@ -52,7 +51,7 @@ function drawLineChart() {
 
     // create axis and append axis to chart
     const xAxis = d3.axisBottom(xScale)
-        .tickFormat(d3.timeFormat("%H:%M:%S"))
+                    .tickFormat(d3.timeFormat("%H:%M:%S"))
     const yAxis = d3.axisLeft(yScale)
     chart.append("g")
          .attr("class", "x-axis")
@@ -64,17 +63,66 @@ function drawLineChart() {
          .attr("font-weight", "500")
          .attr("font-size", "12px")
 
+    // generate and append line data
     const lineGenerator = d3.line()
                             .x(d => xScale(new Date(d["Time"])))
                             .y(d => yScale(d["Value"]))
                             .curve(d3.curveMonotoneX)
-
     chart.append("path")
          .attr("d", lineGenerator(lineChartData["Data"]))
-        .attr("fill", "none")
-        .attr("stroke", "hsla(355, 65%, 65%, 1.0)")
+         .attr("fill", "none")
+         .attr("stroke", "hsla(355, 65%, 65%, 1.0)")
 
+    //create tooltip
+    const tooltip = d3.select("body")
+                      .append("div")
+                      .style("position", "absolute")
+                      .style("background", "#f4f4f4")
+                      .style("padding", "5px 10px")
+                      .style("border", "1px solid #ccc")
+                      .style("border-radius", "5px")
+                      .style("pointer-events", "none")
+                      .style("opacity", 0);
 
+    // Add circles at data points, and attach tooltip events.
+    const bisectDate = d3.bisector(d => new Date(d["Time"])).left;
+
+    // Overlay rectangle to capture mouse events over the entire chart area.
+    chart.append("rect")
+         .attr("class", "overlay")
+         .attr("width", innerWidth)
+         .attr("height", innerHeight)
+         .style("fill", "none")
+         .style("pointer-events", "all")
+         .on("mousemove", (event) => {
+             // Get mouse position relative to the chart
+             const [xPos] = d3.pointer(event);
+             // Convert the x position to a date
+             const x0 = xScale.invert(xPos);
+             // Find the index of the closest data point
+             const index = bisectDate(lineChartData["Data"], x0);
+             const d0 = lineChartData["Data"][index - 1];
+             const d1 = lineChartData["Data"][index];
+             // Use the closer of the two data points (if available)
+             let d = d0;
+             if (d1 && x0 - new Date(d0["Time"]) > new Date(d1["Time"]) - x0) {
+                 d = d1;
+             }
+             // Update and position the tooltip
+             tooltip.transition()
+                    .duration(100)
+                    .style("opacity", 0.9);
+             tooltip.html(
+                 `<strong>Time:</strong> ${d3.timeFormat("%H:%M:%S")(new Date(d["Time"]))}<br/>
+                  <strong>Value:</strong> ${d["Value"]}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 25) + "px");
+         })
+         .on("mouseout", () => {
+             tooltip.transition()
+                    .duration(100)
+                    .style("opacity", 0);
+         });
 }
 
 function drawBarChart() {
