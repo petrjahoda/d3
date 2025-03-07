@@ -18,6 +18,21 @@ fetch("/d3_line_chart_data", {
 }).then(response => response.json().then(data => {
     lineChartData = data;
     drawLineChart()
+    const jsonString = JSON.stringify(lineChartData["Data"]);
+
+// Create a new Blob from the JSON string to accurately get the byte size
+    const blob = new Blob([jsonString]);
+    const bytes = blob.size;
+
+// Convert bytes to kilobytes and megabytes
+    const kilobytes = bytes / 1024;
+    const megabytes = kilobytes / 1024;
+
+// Print the sizes
+    console.log(`Size in bytes: ${bytes}`);
+    console.log(`Size in KB: ${kilobytes.toFixed(2)}`);
+    console.log(`Size in MB: ${megabytes.toFixed(2)}`);
+
     window.addEventListener("resize", drawLineChart);
 })).catch((e) => console.error(e))
 
@@ -55,22 +70,24 @@ function drawLineChart() {
     const yAxis = d3.axisLeft(yScale)
     chart.append("g")
          .attr("class", "x-axis")
-         .attr("transform", `translate(0, ${innerHeight})`)
+         .attr("transform", `translate(0, ${innerHeight+10})`)
          .call(xAxis)
     chart.append("g")
          .call(yAxis)
+         .attr("transform", `translate(-5, 0)`)
          .attr("class", "y-axis")
          .attr("font-weight", "500")
          .attr("font-size", "12px")
 
     // generate and append line data
-    const lineGenerator = d3.line()
+    const lineGenerator = d3.area()
                             .x(d => xScale(new Date(d["Time"])))
-                            .y(d => yScale(d["Value"]))
+                            .y0(innerHeight)
+                            .y1(d => yScale(d["Value"]))
                             .curve(d3.curveMonotoneX)
     chart.append("path")
          .attr("d", lineGenerator(lineChartData["Data"]))
-         .attr("fill", "none")
+         .attr("fill", "hsla(355, 65%, 65%, 1.0)")
          .attr("stroke", "hsla(355, 65%, 65%, 1.0)")
 
     //create tooltip
