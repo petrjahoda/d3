@@ -1,60 +1,151 @@
-let chartData;
-const container = d3.select("#container")
+let barChartData;
+let lineChartData;
+const barChartContainer = d3.select("#bar-chart-container")
+const lineChartContainer = d3.select("#line-chart-container")
 
 
-fetch("/d3_data", {
+// fetch("/d3_bar_chart_data", {
+//     method: "POST", headers: {'Content-Type': 'application/json'}
+// }).then(response => response.json().then(data => {
+//     barChartData = data;
+//     drawBarChart()
+//     drawLineChart()
+//     window.addEventListener("resize", drawBarChart);
+// })).catch((e) => console.error(e))
+
+
+fetch("/d3_line_chart_data", {
     method: "POST", headers: {'Content-Type': 'application/json'}
 }).then(response => response.json().then(data => {
-    chartData = data;
-    drawBarChart()
-    window.addEventListener("resize", drawBarChart);
+    lineChartData = data;
+    drawLineChart()
+    window.addEventListener("resize", drawLineChart);
 })).catch((e) => console.error(e))
 
+
+function drawLineChart() {
+    // clear chart
+    lineChartContainer.selectAll("*").remove()
+    // create constants for chart
+    const margin = {top: 100, right: 100, bottom: 100, left: 100}
+    const width = lineChartContainer.node().getBoundingClientRect().width
+    const height = 500
+    const innerWidth = width - margin.left - margin.right
+    const innerHeight = height - margin.top - margin.bottom
+
+    // append svg to dom
+    const svg = lineChartContainer.append("svg")
+                                  .attr("viewBox", [0, 0, width, height])
+
+    // create chart and append to dom
+    const chart = svg.append("g")
+                     .attr("transform", `translate(${margin.left}, ${margin.top})`)
+
+    // create scales
+    const xScale = d3.scaleTime()
+                     .domain([d3.min(lineChartData["Data"], d => new Date(d["Time"])), d3.max(lineChartData["Data"], d => new Date(d["Time"]))])
+                     .range([0, innerWidth])
+    const yScale = d3.scaleLinear()
+                     .domain([d3.max(lineChartData["Data"], d => d["Value"]), 0])
+                     .range([0, innerHeight])
+                     .nice()
+
+    // create axis and append axis to chart
+    const xAxis = d3.axisBottom(xScale)
+        .tickFormat(d3.timeFormat("%H:%M:%S"))
+    const yAxis = d3.axisLeft(yScale)
+    chart.append("g")
+         .attr("class", "x-axis")
+         .attr("transform", `translate(0, ${innerHeight})`)
+         .call(xAxis)
+    chart.append("g")
+         .call(yAxis)
+         .attr("class", "y-axis")
+         .attr("font-weight", "500")
+         .attr("font-size", "12px")
+
+    const lineGenerator = d3.line()
+                            .x(d => xScale(new Date(d["Time"])))
+                            .y(d => yScale(d["Value"]))
+                            .curve(d3.curveMonotoneX)
+
+    chart.append("path")
+         .attr("d", lineGenerator(lineChartData["Data"]))
+        .attr("fill", "none")
+        .attr("stroke", "hsla(355, 65%, 65%, 1.0)")
+
+
+}
+
 function drawBarChart() {
+    // clear chart
+    barChartContainer.selectAll("*").remove()
 
     // create constants for chart
     const barHeight = 30
-    const margin = {top: 100, right: 0, bottom: 100, left: 80}
-    const innerWidth = container.node().getBoundingClientRect().width
-    const innerHeight = barHeight * chartData["Data"].length - margin.top - margin.bottom
+    const longestName = d3.max(barChartData["Data"], d => d["Name"].length)
+    const margin = {top: 100, right: 100, bottom: 100, left: longestName * 8}
+    const width = barChartContainer.node().getBoundingClientRect().width
+    const height = barHeight * barChartData["Data"].length
+    const innerWidth = width - margin.left - margin.right
+    const innerHeight = height - margin.top - margin.bottom
 
-    // clear chart
-    container.selectAll("*").remove()
 
     // append svg to dom
-    const svg = container.append("svg")
-                         .attr("width", innerWidth)
-                         .attr("height", innerHeight)
+    const svg = barChartContainer.append("svg")
+                                 .attr("viewBox", [0, 0, width, height])
 
-    // create chart from constants
+    // create chart and append to dom
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
     // create scales
     const xScale = d3.scaleLinear()
-                     .domain([0, d3.max(chartData["Data"], d => d["Age"])])
+                     .domain([0, d3.max(barChartData["Data"], d => d["Age"])])
                      .range([0, innerWidth])
                      .nice()
     const yScale = d3.scaleBand()
-                     .domain(chartData["Data"].map(d => d["Name"]))
-                     .range([0, barHeight * chartData["Data"].length])
-                     .paddingInner(0.1)
+                     .domain(barChartData["Data"].map(d => d["Name"]))
+                     .range([0, innerHeight])
+                     .paddingInner(0.08)
 
-    // create and append axis from scales
+    // create axis and append axis to chart
+    let tickCount = Math.floor(innerWidth / 100)
     const xAxis = d3.axisBottom(xScale)
-                    .tickFormat(d => d + " let");
+                    .tickFormat(d => d + " let")
+                    .ticks(tickCount)
     const yAxis = d3.axisLeft(yScale)
                     .tickSize(0)
     chart.append("g")
-         .attr("transform", `translate(0, -30)`)
+         .attr("transform", `translate(0, -20)`)
+         .attr("class", "x-axis")
          .call(xAxis)
     chart.append("g")
          .call(yAxis)
-         .attr("transform", `translate(-0.5, 0)`)
+         .attr("class", "y-axis")
+         .attr("font-weight", "500")
+         .attr("font-size", "12px")
+         .attr("transform", `translate(-2, 0)`)
+
+    //make axis fancier
+    d3.select(".x-axis")
+      .selectAll('path')
+      .remove()
+    d3.select(".x-axis")
+      .selectAll('text')
+      .attr("font-size", "12px")
+      .attr("transform", "translate(0, -10)");
+    d3.select(".x-axis")
+      .selectAll('line')
+      .attr("transform", "translate(0, 10)");
+    d3.select(".y-axis")
+      .selectAll('path')
+      .remove()
 
     // append data to chart
-    chart.selectAll(".bar")
-         .data(chartData["Data"])
+    chart.append("g")
+         .selectAll(".bar")
+         .data(barChartData["Data"])
          .join("rect")
          .attr("class", "bar")
          .attr("x", 0)
@@ -63,21 +154,20 @@ function drawBarChart() {
          .attr("height", yScale.bandwidth())
          .attr("fill", d => d["Color"])
 
-    // append labels to data
+    // append age labels to the end fo every bar
     chart.selectAll(".label")
-         .data(chartData["Data"])
+         .data(barChartData["Data"])
          .join("text")
          .text(d => d["Age"] + " let")
-         .attr("x", d => xScale(d["Age"]) - 35)
+         .attr("x", d => xScale(d["Age"]) + 5)
          .attr("y", d => yScale(d["Name"]) + yScale.bandwidth() / 2)
-         .attr("font-family", "sans-serif")
-         .attr("font-size", "12px")
-         .attr("fill", "white")
+         .attr("font-size", "10px")
+         .attr("fill", "black")
          .attr("alignment-baseline", "middle");
 
-    // draw vertical grid lines
+    // draw vertical grid lines through chart
     chart.selectAll(".grid-line")
-         .data(xScale.ticks())
+         .data(xScale.ticks(tickCount))
          .join("line")
          .attr("class", "grid-line")
          .attr("x1", d => xScale(d))
@@ -86,4 +176,24 @@ function drawBarChart() {
          .attr("y2", innerHeight)
          .attr("stroke", "hsla(215, 12%, 15%, 0.2)")
          .attr("stroke-dasharray", "4,4");
+
+    // add interactivity
+    chart.selectAll("rect")
+         .on("mouseover", function (event, d) {
+             console.log(d["Name"]);
+             chart.selectAll("rect")
+                  .transition()
+                  .duration(500)
+                  .style("opacity", 0.5);
+             d3.select(this)
+               .transition()
+               .duration(200)
+               .style("opacity", 1);
+         })
+         .on("mouseout", function () {
+             chart.selectAll("rect")
+                  .transition()
+                  .duration(500)
+                  .style("opacity", 1);
+         });
 }

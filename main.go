@@ -12,8 +12,10 @@ func main() {
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("js"))))
 	http.Handle("/svg/", http.StripPrefix("/svg/", http.FileServer(http.Dir("svg"))))
+	http.Handle("/font/", http.StripPrefix("/font/", http.FileServer(http.Dir("font"))))
 	http.HandleFunc("/", home)
-	http.HandleFunc("/d3_data", d3Data)
+	http.HandleFunc("/d3_bar_chart_data", d3BarChartData)
+	http.HandleFunc("/d3_line_chart_data", d3LineChartData)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		os.Exit(-1)
