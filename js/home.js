@@ -4,6 +4,7 @@ const barChartContainer = d3.select("#bar-chart-container")
 const lineChartContainer = d3.select("#line-chart-container")
 const donutChartContainer = d3.select("#donut-chart-container")
 const pieChartContainer = d3.select("#pie-chart-container")
+const stackedChartContainer = d3.select("#stacked-chart-container")
 const tooltip = d3.select("body")
                   .append("div")
                   .style("position", "absolute")
@@ -36,12 +37,15 @@ fetch("/d3_line_chart_data", {
     window.addEventListener("resize", drawLineChart);
 })).catch((e) => console.error(e))
 
-drawDonutChart()
+// drawDonutChart()
 const pieData = [
     {"name": "CNC-1", "value": 45},
     {"name": "CNC-2", "value": 21},
     {"name": "CNC-3", "value": 56},
     {"name": "CNC-4", "value": 33}
 ];
-drawPieChart(pieData)
+// drawPieChart(pieData)
 
+
+drawStackedChart()
+window.addEventListener("resize", drawStackedChart);

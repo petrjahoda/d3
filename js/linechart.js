@@ -8,6 +8,7 @@ function drawLineChart() {
     const height = 500
     const innerWidth = width - margin.left - margin.right
     const innerHeight = height - margin.top - margin.bottom
+    let tickCount = Math.floor(innerWidth / 100)
 
     // append svg to dom
     const svg = lineChartContainer.append("svg")
@@ -28,6 +29,7 @@ function drawLineChart() {
 
     // create axis and append axis to chart
     const xAxis = d3.axisBottom(xScale)
+                    .ticks(tickCount)
                     .tickFormat(d3.timeFormat("%H:%M:%S"))
     const yAxis = d3.axisLeft(yScale)
     chart.append("g")
@@ -80,8 +82,8 @@ function drawLineChart() {
              tooltip.html(
                  `<div style="margin-bottom: 5px; font-weight: 500; color: #fff;">${d3.timeFormat("%H:%M:%S")(new Date(d["Time"]))}</div>
                   <div style="display: flex; align-items: center;">
-                    <span style="display: inline-block; width: 10px; height: 10px; background-color: hsla(355, 65%, 65%, 1.0); margin-right: 5px;"></span>
-                    <span>Value: ${d["Value"]}</span>
+                  <span style="display: inline-block; width: 10px; height: 10px; background-color: hsla(355, 65%, 65%, 1.0); margin-right: 5px;"></span>
+                  <span>Value: ${d["Value"]}</span>
                   </div>`)
                     .style("left", event.pageX + "px")
                     .style("top", event.pageY + "px")
