@@ -1,6 +1,7 @@
 function drawLineChart() {
     // clear chart
     lineChartContainer.selectAll("*").remove()
+
     // create constants for chart
     const margin = {top: 100, right: 100, bottom: 100, left: 100}
     const width = lineChartContainer.node().getBoundingClientRect().width
@@ -51,23 +52,7 @@ function drawLineChart() {
          .attr("fill", "hsla(355, 65%, 65%, 1.0)")
          .attr("stroke", "hsla(355, 65%, 65%, 1.0)")
 
-    //create tooltip
-    const tooltip = d3.select("body")
-                      .append("div")
-                      .style("position", "absolute")
-                      .style("display", "block")
-                      .style("background-color", "rgba(50, 50, 50, 0.7)")
-                      .style("border-radius", "4px")
-                      .style("color", "#fff")
-                      .style("font-size", "14px")
-                      .style("padding", "10px")
-                      .style("pointer-events", "none")
-                      .style("box-shadow", "0 0 10px rgba(0, 0, 0, 0.2)")
-                      .style("z-index", "9999")
-                      .style("opacity", 0);
-
-
-    // Overlay rectangle to capture mouse events over the entire chart area.
+    // add tooltip data to overlay rectangle to capture mouse events over the entire chart area.
     const bisectDate = d3.bisector(d => new Date(d["Time"])).left;
     chart.append("rect")
          .attr("class", "overlay")
@@ -93,7 +78,7 @@ function drawLineChart() {
                     .duration(100)
                     .style("opacity", 0.9);
              tooltip.html(
-                 `<div style="margin-bottom: 5px; font-weight: bold; color: #fff;">${d3.timeFormat("%H:%M:%S")(new Date(d["Time"]))}</div>
+                 `<div style="margin-bottom: 5px; font-weight: 500; color: #fff;">${d3.timeFormat("%H:%M:%S")(new Date(d["Time"]))}</div>
                   <div style="display: flex; align-items: center;">
                     <span style="display: inline-block; width: 10px; height: 10px; background-color: hsla(355, 65%, 65%, 1.0); margin-right: 5px;"></span>
                     <span>Value: ${d["Value"]}</span>
