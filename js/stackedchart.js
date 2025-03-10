@@ -109,7 +109,7 @@ function drawStackedChart() {
     // clear chart
     stackedChartContainer.selectAll("*").remove()
 
-    // Parse and preprocess the data
+    // parse and preprocess the data
     const dates = Object.keys(stackedChartData[0].days);
     const series = stackedChartData.map(d => d.name);
     const data = dates.map(date => {
@@ -128,53 +128,49 @@ function drawStackedChart() {
     const innerHeight = height - margin.top - margin.bottom
     const stack = d3.stack().keys(series);
     const stackedData = stack(data);
-    const tickCount = Math.floor(innerWidth / 50)
+    const tickCount = Math.floor(innerWidth / 25)
 
     // append svg to dom
     const svg = stackedChartContainer.append("svg")
-                                  .attr("viewBox", [0, 0, width, height])
+                                     .attr("viewBox", [0, 0, width, height])
 
     // create chart and append to dom
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
-    // Create scales
+    // create scales
     const xScale = d3.scaleBand()
                      .domain(dates)
                      .range([0, innerWidth])
                      .padding(0.1);
 
     const yScale = d3.scaleLinear()
-                     .domain([0, d3.max(stackedData, d =>
-                         d3.max(d, d => d[1])
-                     )])
+                     .domain([0, d3.max(stackedData, d => d3.max(d, d => d[1]))])
                      .nice()
                      .range([innerHeight, 0]);
 
     const colorScale = d3.scaleOrdinal(d3.schemeTableau10)
                          .domain(series);
 
-    // Add X axis
+    // add X axis
+    const xAxis = d3.axisBottom(xScale)
+                    .tickFormat(d => d3.timeFormat('%b %d')(new Date(d)))
+                    .tickValues(dates.filter((_, i) => i % Math.ceil(dates.length / tickCount) === 0))
+    const yAxis = d3.axisLeft(yScale)
     chart.append('g')
-       .attr('transform', `translate(0,${innerHeight})`)
-       .call(d3.axisBottom(xScale)
-               .ticks(tickCount)
-               .tickFormat(d => d3.timeFormat('%b %d')(new Date(d))) // Format date
-               .tickValues(dates.filter((_, i) => i % Math.ceil(dates.length / tickCount) === 0))) // Limit ticks
-       .selectAll('text')
-       .style('text-anchor', 'middle')
-
-    // Add Y axis
+         .attr('transform', `translate(0,${innerHeight})`)
+         .call(xAxis)
+         .selectAll('text')
+         .style('text-anchor', 'middle')
     chart.append('g')
-       .call(d3.axisLeft(yScale));
+         .call(yAxis);
 
-    // Add chart
+    // add chart data
     const group = chart.selectAll('.layer')
-                     .data(stackedData)
-                     .join('g')
-                     .attr('class', 'layer')
-                     .style('fill', d => colorScale(d.key));
-
+                       .data(stackedData)
+                       .join('g')
+                       .attr('class', 'layer')
+                       .style('fill', d => colorScale(d.key));
     group.selectAll('rect')
          .data(d => d)
          .join('rect')
@@ -183,19 +179,17 @@ function drawStackedChart() {
          .attr('height', d => yScale(d[0]) - yScale(d[1]))
          .attr('width', xScale.bandwidth());
 
-    // Add legend
+    // add legend
     const legend = svg.append('g')
-                      .attr('transform', `translate(${width - 100},${0})`);
+                      .attr('transform', `translate(${margin.left},${margin.top + innerHeight + 50})`);
 
     series.forEach((name, i) => {
         const legendRow = legend.append('g')
-                                .attr('transform', `translate(0,${i * 20})`);
-
+                                .attr('transform', `translate(${i * 120},0)`);
         legendRow.append('rect')
                  .attr('width', 15)
                  .attr('height', 15)
                  .style('fill', colorScale(name));
-
         legendRow.append('text')
                  .attr('x', 20)
                  .attr('y', 12.5)
