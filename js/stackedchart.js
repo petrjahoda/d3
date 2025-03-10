@@ -171,15 +171,13 @@ function drawStackedChart() {
     // Add chart
     const group = chart.selectAll('.layer')
                      .data(stackedData)
-                     .enter()
-                     .append('g')
+                     .join('g')
                      .attr('class', 'layer')
                      .style('fill', d => colorScale(d.key));
 
     group.selectAll('rect')
          .data(d => d)
-         .enter()
-         .append('rect')
+         .join('rect')
          .attr('x', d => xScale(d.data.date))
          .attr('y', d => yScale(d[1]))
          .attr('height', d => yScale(d[0]) - yScale(d[1]))

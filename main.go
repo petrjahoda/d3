@@ -2,14 +2,9 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/image/draw"
 	"html/template"
-	"image"
-	"image/jpeg"
-	"image/png"
 	"net/http"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -25,69 +20,6 @@ func main() {
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		os.Exit(-1)
-	}
-}
-
-func convertImage() {
-	var src image.Image
-	var outFile *os.File
-	inFile, err := os.Open("input.png")
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	err = inFile.Close()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	if strings.HasSuffix(inFile.Name(), ".jpg") {
-		src, _, err = image.Decode(inFile)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		dst := image.NewRGBA(image.Rect(0, 0, src.Bounds().Dx()/2, src.Bounds().Dy()/2))
-		draw.CatmullRom.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
-		outFile, err = os.Create("output.jpg")
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		err = outFile.Close()
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		err = jpeg.Encode(outFile, dst, nil)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-	} else if strings.HasSuffix(inFile.Name(), ".png") {
-		src, _, err = image.Decode(inFile)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		dst := image.NewRGBA(image.Rect(0, 0, src.Bounds().Dx()/2, src.Bounds().Dy()/2))
-		draw.CatmullRom.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
-		outFile, err = os.Create("output.png")
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		err = outFile.Close()
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		err = png.Encode(outFile, dst)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
 	}
 }
 
