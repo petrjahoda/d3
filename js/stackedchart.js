@@ -112,22 +112,46 @@ function drawStackedChart() {
     // parse and preprocess the data
     const dates = Object.keys(stackedChartData[0].days);
     const series = stackedChartData.map(d => d.name);
-    const data = dates.map(date => {
-        const entry = {date: date};
-        stackedChartData.forEach(d => {
-            entry[d.name] = d.days[date];
-        });
-        return entry;
-    });
+    const data = dates.map(date => ({date, ...Object.fromEntries(stackedChartData.map(d => [d.name, d.days[date]]))}));
+    /*
+    TRANSFORM FROM THIS...
+    [
+    {
+        "name": "CNC-1",
+        "days": {
+            "2024-01-01": 10.2,
+            "2024-01-02": 10.7,
+            ...
+        }
+    },
+    ]
 
+    ... INTO THIS
+
+    [
+    {
+        "date": "2024-01-01",
+        "CNC-1": 10.2,
+        "CNC-2": 12.5,
+        "CNC-3": 8.4
+    },
+    {
+        "date": "2024-01-02",
+        "CNC-1": 10.7,
+        "CNC-2": 14.3,
+        "CNC-3": 11.7
+    },
+    ]
+     */
+    console.log(series);
+    console.log(dates);
+    console.log(data);
     // create constants for chart
     const margin = {top: 100, right: 100, bottom: 100, left: 100}
     const width = stackedChartContainer.node().getBoundingClientRect().width
     const height = 500
     const innerWidth = width - margin.left - margin.right
     const innerHeight = height - margin.top - margin.bottom
-    const stack = d3.stack().keys(series);
-    const stackedData = stack(data);
     const tickCount = Math.floor(innerWidth / 25)
 
     // append svg to dom
@@ -138,6 +162,11 @@ function drawStackedChart() {
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
+    // generate data for stack
+    const stackGenerator = d3.stack()
+                             .keys(series);
+    const stackedData = stackGenerator(data);
+
     // create scales
     const xScale = d3.scaleBand()
                      .domain(dates)
@@ -146,8 +175,8 @@ function drawStackedChart() {
 
     const yScale = d3.scaleLinear()
                      .domain([0, d3.max(stackedData, d => d3.max(d, d => d[1]))])
+                     .range([innerHeight, 0])
                      .nice()
-                     .range([innerHeight, 0]);
 
     const colorScale = d3.scaleOrdinal(d3.schemeTableau10)
                          .domain(series);
@@ -180,21 +209,23 @@ function drawStackedChart() {
          .attr('width', xScale.bandwidth());
 
     // add legend
-    const legend = svg.append('g')
-                      .attr('transform', `translate(${margin.left},${margin.top + innerHeight + 50})`);
+    svg.append('g')
+       .attr('transform', `translate(${margin.left},${margin.top + innerHeight + 50})`)
+       .selectAll('g')
+       .data(series)
+       .join('g')
+       .attr('transform', (d, i) => `translate(${i * 120},0)`)
+       .call(g => {
+           g.append('rect')
+            .attr('width', 15)
+            .attr('height', 15)
+            .style('fill', d => colorScale(d));
+           g.append('text')
+            .attr('x', 20)
+            .attr('y', 12.5)
+            .attr('text-anchor', 'start')
+            .style('font-size', '12px')
+            .text(d => d);
+       });
 
-    series.forEach((name, i) => {
-        const legendRow = legend.append('g')
-                                .attr('transform', `translate(${i * 120},0)`);
-        legendRow.append('rect')
-                 .attr('width', 15)
-                 .attr('height', 15)
-                 .style('fill', colorScale(name));
-        legendRow.append('text')
-                 .attr('x', 20)
-                 .attr('y', 12.5)
-                 .attr('text-anchor', 'start')
-                 .style('font-size', '12px')
-                 .text(name);
-    });
 }
