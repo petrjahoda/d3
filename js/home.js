@@ -1,5 +1,6 @@
 let barChartData;
 let lineChartData;
+let stackedChartData;
 const barChartContainer = d3.select("#bar-chart-container")
 const lineChartContainer = d3.select("#line-chart-container")
 const donutChartContainer = d3.select("#donut-chart-container")
@@ -20,30 +21,35 @@ const tooltip = d3.select("body")
                   .style("opacity", 0);
 
 
-// fetch("/d3_bar_chart_data", {
-//     method: "POST", headers: {'Content-Type': 'application/json'}
-// }).then(response => response.json().then(data => {
-//     barChartData = data;
-//     drawBarChart()
-//     window.addEventListener("resize", drawBarChart);
-// })).catch((e) => console.error(e))
-// fetch("/d3_line_chart_data", {
-//     method: "POST", headers: {'Content-Type': 'application/json'}
-// }).then(response => response.json().then(data => {
-//     lineChartData = data;
-//     drawLineChart()
-//     window.addEventListener("resize", drawLineChart);
-// })).catch((e) => console.error(e))
+fetch("/d3_bar_chart_data", {
+    method: "POST", headers: {'Content-Type': 'application/json'}
+}).then(response => response.json().then(data => {
+    barChartData = data;
+    drawBarChart()
+    window.addEventListener("resize", drawBarChart);
+})).catch((e) => console.error(e))
+fetch("/d3_line_chart_data", {
+    method: "POST", headers: {'Content-Type': 'application/json'}
+}).then(response => response.json().then(data => {
+    lineChartData = data;
+    drawLineChart()
+    window.addEventListener("resize", drawLineChart);
+})).catch((e) => console.error(e))
 
-// drawDonutChart()
+drawDonutChart()
 const pieData = [
     {"name": "CNC-1", "value": 45},
     {"name": "CNC-2", "value": 21},
     {"name": "CNC-3", "value": 56},
     {"name": "CNC-4", "value": 33}
 ];
-// drawPieChart(pieData)
+drawPieChart(pieData)
 
+fetch("/d3_stacked_chart_data", {
+    method: "POST", headers: {'Content-Type': 'application/json'}
+}).then(response => response.json().then(data => {
+    stackedChartData = data;
+    drawStackedChart()
+    window.addEventListener("resize", drawStackedChart);
+})).catch((e) => console.error(e))
 
-drawStackedChart()
-window.addEventListener("resize", drawStackedChart);

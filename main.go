@@ -16,6 +16,7 @@ func main() {
 	http.Handle("/font/", http.StripPrefix("/font/", http.FileServer(http.Dir("font"))))
 	http.HandleFunc("/", home)
 	http.HandleFunc("/d3_bar_chart_data", d3BarChartData)
+	http.HandleFunc("/d3_stacked_chart_data", d3StackedChartData)
 	http.HandleFunc("/d3_line_chart_data", d3LineChartData)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

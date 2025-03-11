@@ -32,6 +32,16 @@ type D3LineDataResult struct {
 	Value string
 }
 
+type StackedData struct {
+	Name   string
+	Values []Value
+}
+
+type Value struct {
+	Key   string
+	Value float32
+}
+
 func d3BarChartData(writer http.ResponseWriter, request *http.Request) {
 	d3DataResult := D3BarDataResult{
 		Result: "OK",
@@ -73,6 +83,60 @@ func d3BarChartData(writer http.ResponseWriter, request *http.Request) {
 	})
 	writer.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(writer).Encode(d3DataResult)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func d3StackedChartData(writer http.ResponseWriter, request *http.Request) {
+	d3StackedData := []StackedData{
+		{"CNC-1", []Value{
+			{"2025-01-01", 10.23},
+			{"2025-01-02", 29.44},
+			{"2025-01-03", 18.95},
+			{"2025-01-04", 21.67},
+			{"2025-01-05", 24.81},
+			{"2025-01-06", 26.52},
+			{"2025-01-07", 19.34},
+			{"2025-01-08", 22.76},
+			{"2025-01-09", 23.45},
+			{"2025-01-10", 25.87},
+			{"2025-01-11", 20.63},
+			{"2025-01-12", 27.34},
+		}},
+
+		{"CNC-2", []Value{
+			{"2025-01-01", 15.32},
+			{"2025-01-02", 18.27},
+			{"2025-01-03", 22.41},
+			{"2025-01-04", 24.15},
+			{"2025-01-05", 19.83},
+			{"2025-01-06", 21.67},
+			{"2025-01-07", 20.56},
+			{"2025-01-08", 23.12},
+			{"2025-01-09", 25.76},
+			{"2025-01-10", 18.94},
+			{"2025-01-11", 20.23},
+			{"2025-01-12", 22.78},
+		}},
+
+		{"CNC-3", []Value{
+			{"2025-01-01", 12.45},
+			{"2025-01-02", 14.67},
+			{"2025-01-03", 19.78},
+			{"2025-01-04", 23.41},
+			{"2025-01-05", 20.56},
+			{"2025-01-06", 18.29},
+			{"2025-01-07", 24.78},
+			{"2025-01-08", 22.34},
+			{"2025-01-09", 26.45},
+			{"2025-01-10", 21.68},
+			{"2025-01-11", 19.89},
+			{"2025-01-12", 25.23},
+		}},
+	}
+	writer.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(writer).Encode(d3StackedData)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
