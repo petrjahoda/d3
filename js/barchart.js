@@ -30,13 +30,15 @@ function drawBarChart() {
                      .range([0, innerHeight])
                      .paddingInner(0.08)
 
-    // create axis and append axis to chart
+    // create axis with scales
     let tickCount = Math.floor(innerWidth / 100)
     const xAxis = d3.axisBottom(xScale)
                     .tickFormat(d => d + " let")
                     .ticks(tickCount)
     const yAxis = d3.axisLeft(yScale)
                     .tickSize(0)
+
+    // append axis to chart
     chart.append("g")
          .attr("transform", `translate(0, -20)`)
          .attr("class", "x-axis")
@@ -76,7 +78,7 @@ function drawBarChart() {
          .attr("fill", d => d["Color"])
 
 
-    // append age labels to the end fo every bar
+    // append age labels to the end of every bar
     chart.selectAll(".label")
          .data(barChartData["Data"])
          .join("text")
@@ -102,7 +104,6 @@ function drawBarChart() {
     // add interactivity
     chart.selectAll("rect")
          .on("mouseover", function (event, d) {
-             console.log(d["Name"]);
              chart.selectAll("rect")
                   .transition()
                   .duration(500)

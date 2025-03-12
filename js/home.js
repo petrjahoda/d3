@@ -6,6 +6,7 @@ const lineChartContainer = d3.select("#line-chart-container")
 const donutChartContainer = d3.select("#donut-chart-container")
 const pieChartContainer = d3.select("#pie-chart-container")
 const stackedChartContainer = d3.select("#stacked-chart-container")
+const steamedChartContainer = d3.select("#steamed-chart-container")
 const tooltip = d3.select("body")
                   .append("div")
                   .style("position", "absolute")
@@ -28,6 +29,7 @@ fetch("/d3_bar_chart_data", {
     drawBarChart()
     window.addEventListener("resize", drawBarChart);
 })).catch((e) => console.error(e))
+
 fetch("/d3_line_chart_data", {
     method: "POST", headers: {'Content-Type': 'application/json'}
 }).then(response => response.json().then(data => {
@@ -50,6 +52,7 @@ fetch("/d3_stacked_chart_data", {
 }).then(response => response.json().then(data => {
     stackedChartData = data;
     drawStackedChart()
-    window.addEventListener("resize", drawStackedChart);
+    drawSteamChart()
+    window.addEventListener("resize", drawStackedChart, drawSteamChart);
 })).catch((e) => console.error(e))
 

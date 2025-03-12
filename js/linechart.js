@@ -72,7 +72,7 @@ function drawLineChart() {
         return result;
     }
 
-    let currentData = resampleData(xScale.domain());
+    let resampledData = resampleData(xScale.domain());
     // generate and append line data
     const lineGenerator = d3.area()
                             .x(d => xScale(new Date(d["Time"] * 1000)))
@@ -80,7 +80,7 @@ function drawLineChart() {
                             .y1(d => yScale(d["Value"]))
                             .curve(d3.curveMonotoneX)
     chart.append("path")
-         .attr("d", lineGenerator(currentData))
+         .attr("d", lineGenerator(resampledData))
          .attr("fill", "hsla(355, 65%, 65%, 1.0)")
          .attr("stroke", "hsla(355, 65%, 65%, 1.0)")
 
@@ -95,9 +95,9 @@ function drawLineChart() {
          .on("mousemove", (event) => {
              const [xPos] = d3.pointer(event);
              const x0 = xScale.invert(xPos);
-             const index = bisectDate(currentData, x0);
-             const d0 = currentData[index - 1];
-             const d1 = currentData[index];
+             const index = bisectDate(resampledData, x0);
+             const d0 = resampledData[index - 1];
+             const d1 = resampledData[index];
              let d = d0;
              if (d1 && x0 - new Date(d0["Time"] * 1000) > new Date(d1["Time"] * 1000) - x0) {
                  d = d1;

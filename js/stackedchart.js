@@ -90,7 +90,6 @@ function drawStackedChart() {
        });
 
     // add tooltip
-
     chart.selectAll("rect")
          .on("mousemove", function (event, d) {
              const barColor = d3.select(this).style("fill");
