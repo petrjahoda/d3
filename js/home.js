@@ -53,6 +53,7 @@ fetch("/d3_stacked_chart_data", {
     stackedChartData = data;
     drawStackedChart()
     drawSteamChart()
-    window.addEventListener("resize", drawStackedChart, drawSteamChart);
+    window.addEventListener("resize", drawStackedChart);
+    window.addEventListener("resize", drawSteamChart);
 })).catch((e) => console.error(e))
 

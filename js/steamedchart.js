@@ -31,7 +31,8 @@ function drawSteamChart() {
     // create scales
     const xScale = d3.scaleBand()
                      .domain(dates)
-                     .range([0, innerWidth]);
+                     .range([0, innerWidth])
+                     .padding(0.1);
     const yScale = d3.scaleLinear()
                      .domain([d3.min(stackedData, d => d3.min(d, d => d[1])), d3.max(stackedData, d => d3.max(d, d => d[1]))])
                      .range([innerHeight, 0])
@@ -48,15 +49,14 @@ function drawSteamChart() {
 
     // add X axis
     const xAxis = d3.axisBottom(xScale)
-                    .ticks(Math.min(dates.length, 10));
+                    .tickFormat(d => d3.timeFormat('%b %d')(new Date(d)))
+                    .tickValues(dates.filter((_, i) => i % Math.ceil(dates.length / tickCount) === 0))
     const yAxis = d3.axisLeft(yScale);
-
     chart.append('g')
          .attr('transform', `translate(0,${innerHeight})`)
          .call(xAxis)
          .selectAll('text')
          .style('text-anchor', 'middle');
-
     chart.append('g')
          .call(yAxis);
 
@@ -68,7 +68,6 @@ function drawSteamChart() {
          .join('path')
          .attr('d', area)
          .attr('fill', d => colorScale(d.key))
-
 
     // add legend
     svg.append('g')
@@ -91,9 +90,6 @@ function drawSteamChart() {
        });
 
     // Add tooltip
-
-
-
     chart.selectAll('path')
          .on("mousemove", function (event, d) {
              const hoveredDate = xScale.domain().find(date => Math.abs(xScale(date) + xScale.bandwidth() / 2 - d3.pointer(event, this)[0]) < xScale.bandwidth() / 2);
