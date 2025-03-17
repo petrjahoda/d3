@@ -35,7 +35,7 @@ function drawStackedChart() {
                      .padding(0.1);
 
     const yScale = d3.scaleLinear()
-                     .domain([0, d3.max(stackedData, d => d3.max(d, d => d[1]))])
+                     .domain([d3.min(stackedData, d => d3.min(d, d => d[1])), d3.max(stackedData, d => d3.max(d, d => d[1]))])
                      .range([innerHeight, 0])
                      .nice()
 

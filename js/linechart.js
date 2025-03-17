@@ -40,36 +40,39 @@ function drawLineChart() {
 
     // resample data
     function resampleData(xDomain) {
-        let lowerBound = xDomain[0].getTime().valueOf();
-        let upperBound = xDomain[1].getTime().valueOf();
-        let filteredData = lineChartData["Data"].filter(point => {
-            const pointTime = new Date(point["Time"] * 1000);
-            return point["Time"] * 1000 >= lowerBound && pointTime <= upperBound;
-        });
+        const lowerBound = xDomain[0].getTime();
+        const upperBound = xDomain[1].getTime();
+        let filteredData = [];
+        for (let i = 0; i < lineChartData["Data"].length; i++) {
+            const point = lineChartData["Data"][i];
+            const timestamp = point["Time"] * 1000;
+            if (timestamp >= lowerBound && timestamp <= upperBound) {
+                filteredData.push(point);
+            }
+        }
         if (filteredData.length <= innerWidth) {
             return filteredData;
         }
-        let result = [];
         const step = (filteredData.length - 1) / (innerWidth - 1);
+        const result = new Array(innerWidth);
+        let resultIndex = 0;
         for (let i = 0; i < innerWidth; i++) {
             const exactIndex = i * step;
             const lowerIndex = Math.floor(exactIndex);
-            if (lowerIndex > filteredData.length - 1) {
-                continue;
-            }
-            const upperIndex = Math.min(Math.ceil(exactIndex), filteredData.length - 1);
-            if (lowerIndex === upperIndex) {
-                result.push(filteredData[lowerIndex]);
+            const fraction = exactIndex - lowerIndex;
+            if (lowerIndex >= filteredData.length - 1) continue;
+            if (exactIndex === lowerIndex) {
+                result[resultIndex++] = filteredData[lowerIndex];
             } else {
-                const fraction = exactIndex - lowerIndex;
                 const lowerPoint = filteredData[lowerIndex];
-                const upperPoint = filteredData[upperIndex];
-                const interpolatedTime = lowerPoint["Time"] * (1 - fraction) + upperPoint["Time"] * fraction
-                const interpolatedValue = lowerPoint["Value"] * (1 - fraction) + upperPoint["Value"] * fraction;
-                result.push({Time: Math.round(interpolatedTime), Value: interpolatedValue});
+                const upperPoint = filteredData[lowerIndex + 1];
+                result[resultIndex++] = {
+                    Time: Math.round(lowerPoint["Time"] + fraction * (upperPoint["Time"] - lowerPoint["Time"])),
+                    Value: lowerPoint["Value"] + fraction * (upperPoint["Value"] - lowerPoint["Value"])
+                };
             }
         }
-        return result;
+        return result.slice(0, resultIndex);
     }
 
     let resampledData = resampleData(xScale.domain());

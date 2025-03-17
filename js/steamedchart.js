@@ -13,6 +13,7 @@ function drawSteamChart() {
     const height = 500
     const innerWidth = width - margin.left - margin.right
     const innerHeight = height - margin.top - margin.bottom
+    const tickCount = Math.floor(innerWidth / 50)
 
     // append svg to dom
     const svg = steamedChartContainer.append("svg")
@@ -24,57 +25,50 @@ function drawSteamChart() {
 
     // generate data for stack
     const stackGenerator = d3.stack()
-                             .keys(names)
-                             .order(d3.stackOrderNone)
-                             .offset(d3.stackOffsetSilhouette);
-    const stackedData = stackGenerator(data)
-
+                             .keys(names);
+    const stackedData = stackGenerator(data);
 
     // create scales
-    const xScale = d3.scaleTime()
-                     .domain(d3.extent(dates, d => new Date(d)))
-                     .range([0, innerWidth])
-
-
+    const xScale = d3.scaleBand()
+                     .domain(dates)
+                     .range([0, innerWidth]);
     const yScale = d3.scaleLinear()
-                     .domain([-d3.max(stackedData, d => d3.max(d, d => d[1])), d3.max(stackedData, d => d3.max(d, d => d[1]))])
+                     .domain([d3.min(stackedData, d => d3.min(d, d => d[1])), d3.max(stackedData, d => d3.max(d, d => d[1]))])
                      .range([innerHeight, 0])
-                     .nice();
-
+                     .nice()
     const colorScale = d3.scaleOrdinal(d3.schemeTableau10)
                          .domain(names);
 
     // create area generator
     const area = d3.area()
-                   .x(d => xScale(new Date(d.data.date)))
+                   .x(d => xScale(d.data.date) + xScale.bandwidth() / 2)
                    .y0(d => yScale(d[0]))
                    .y1(d => yScale(d[1]))
                    .curve(d3.curveMonotoneX); // Makes the curve smoother
 
     // add X axis
     const xAxis = d3.axisBottom(xScale)
-                    .tickFormat(d3.timeFormat('%b %d'))
                     .ticks(Math.min(dates.length, 10));
     const yAxis = d3.axisLeft(yScale);
 
-    // chart.append('g')
-    //      .attr('transform', `translate(0,${innerHeight})`)
-    //      .call(xAxis)
-    //      .selectAll('text')
-    //      .style('text-anchor', 'middle');
-    //
-    // chart.append('g')
-    //      .call(yAxis);
+    chart.append('g')
+         .attr('transform', `translate(0,${innerHeight})`)
+         .call(xAxis)
+         .selectAll('text')
+         .style('text-anchor', 'middle');
 
-    // add chart data - steam areas
-    chart.selectAll('.area')
+    chart.append('g')
+         .call(yAxis);
+
+    // add chart data
+    chart.append('g')
+         .attr('class', 'areas-container')
+         .selectAll('path')
          .data(stackedData)
          .join('path')
-         .attr('class', 'area')
          .attr('d', area)
-         .style('fill', d => colorScale(d.key))
-         .style('stroke', '#fff')
-         .style('stroke-width', 0.5);
+         .attr('fill', d => colorScale(d.key))
+
 
     // add legend
     svg.append('g')
@@ -82,7 +76,7 @@ function drawSteamChart() {
        .selectAll('g')
        .data(names)
        .join('g')
-       .attr('transform', (d, i) => `translate(${i * 120},0)`)
+       .attr('transform', (d, i) => `translate(${i * 121},0)`)
        .call(g => {
            g.append('rect')
             .attr('width', 15)
@@ -90,64 +84,32 @@ function drawSteamChart() {
             .style('fill', d => colorScale(d));
            g.append('text')
             .attr('x', 20)
-            .attr('y', 12.5)
+            .attr('y', 12.6)
             .attr('text-anchor', 'start')
             .style('font-size', '12px')
             .text(d => d);
        });
 
-    // Tooltip functionality with bisector for better hover experience
-    const bisect = d3.bisector(d => new Date(d.date)).left;
+    // Add tooltip
 
-    // Create a vertical line for tooltip
-    const tooltipLine = chart.append('line')
-                             .attr('class', 'tooltip-line')
-                             .style('stroke', '#ddd')
-                             .style('stroke-width', '1px')
-                             .style('stroke-dasharray', '3,3')
-                             .style('opacity', 0);
 
-    // Create invisible overlay for mouse tracking
-    const overlay = chart.append('rect')
-                         .attr('width', innerWidth)
-                         .attr('height', innerHeight)
-                         .style('fill', 'none')
-                         .style('pointer-events', 'all');
 
-    overlay
-        .on('mousemove', function(event) {
-            const mouse = d3.pointer(event);
-            const x0 = xScale.invert(mouse[0]);
-            const idx = bisect(data, x0, 1);
-            const d0 = data[Math.max(0, idx - 1)];
-            const d1 = data[Math.min(data.length - 1, idx)];
-            const d = x0 - new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
+    chart.selectAll('path')
+         .on("mousemove", function (event, d) {
+             const hoveredDate = xScale.domain().find(date => Math.abs(xScale(date) + xScale.bandwidth() / 2 - d3.pointer(event, this)[0]) < xScale.bandwidth() / 2);
+             if (hoveredDate) {
+                 const hoveredValue = d.find(segment => segment.data.date === hoveredDate);
+                 if (hoveredValue) {
+                     tooltip.style("opacity", 1)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 10) + "px")
+                            .html(`<span style="font-weight:500">${d.key}</span><br>Date: ${hoveredDate}<br>Value: ${(hoveredValue[1] - hoveredValue[0]).toPrecision(3)}`);
+                 }
+             }
+         })
+         .on("mouseout", function () {
+             tooltip.style("opacity", 0);
+         });
 
-            // Position the tooltip line
-            tooltipLine
-                .style('opacity', 1)
-                .attr('x1', xScale(new Date(d.date)))
-                .attr('x2', xScale(new Date(d.date)))
-                .attr('y1', 0)
-                .attr('y2', innerHeight);
 
-            // Update tooltip content
-            tooltip.style('opacity', 1)
-                   .html(`
-                    <div style="font-weight:500">${d3.timeFormat('%B %d, %Y')(new Date(d.date))}</div>
-                    ${names.map(name =>
-                       `<div>
-                            <span style="display: inline-block; width: 10px; height: 10px; background-color: ${colorScale(name)}; margin-right: 5px;"></span>
-                            <span style="font-weight:500">${name}</span>: ${d[name].toFixed(1)}
-                        </div>`
-                   ).join('')}
-                `)
-                   .style('left', (event.pageX) + 'px')
-                   .style('top', (event.pageY - 28) + 'px')
-                   .style('transform', 'translate(-50%, -100%)');
-        })
-        .on('mouseout', function() {
-            tooltipLine.style('opacity', 0);
-            tooltip.style('opacity', 0);
-        });
 }
