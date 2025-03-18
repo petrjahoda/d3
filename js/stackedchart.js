@@ -1,48 +1,40 @@
 function drawStackedChart() {
-    // clear chart
+    // 1. clear chart
     stackedChartContainer.selectAll("*").remove()
 
-    // parse and preprocess the data
+    // 2. prepare data
     const dates = stackedChartData[0]["Values"].map(item => item["Key"])
     const names = stackedChartData.map(item => item["Name"]);
     const data = dates.map(date => ({date, ...Object.fromEntries(stackedChartData.map(d => [d["Name"], d["Values"].find(v => v["Key"] === date)?.["Value"] || 0]))}));
+    const stackGenerator = d3.stack()
+                             .keys(names);
+    const stackedData = stackGenerator(data);
 
-    // create constants
+    // 3. create chart
     const margin = {top: 100, right: 100, bottom: 100, left: 100}
     const width = stackedChartContainer.node().getBoundingClientRect().width
     const height = 500
     const innerWidth = width - margin.left - margin.right
     const innerHeight = height - margin.top - margin.bottom
     const tickCount = Math.floor(innerWidth / 50)
-
-    // append svg to dom
     const svg = stackedChartContainer.append("svg")
                                      .attr("viewBox", [0, 0, width, height])
-
-    // create chart and append to dom
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
-    // generate data for stack
-    const stackGenerator = d3.stack()
-                             .keys(names);
-    const stackedData = stackGenerator(data);
-
-    // create scales
+    // 4. create scales
     const xScale = d3.scaleBand()
                      .domain(dates)
                      .range([0, innerWidth])
                      .padding(0.1);
-
     const yScale = d3.scaleLinear()
                      .domain([d3.min(stackedData, d => d3.min(d, d => d[1])), d3.max(stackedData, d => d3.max(d, d => d[1]))])
                      .range([innerHeight, 0])
                      .nice()
-
     const colorScale = d3.scaleOrdinal(d3.schemeTableau10)
                          .domain(names);
 
-    // add X axis
+    // 6. add X axis
     const xAxis = d3.axisBottom(xScale)
                     .tickFormat(d => d3.timeFormat('%b %d')(new Date(d)))
                     .tickValues(dates.filter((_, i) => i % Math.ceil(dates.length / tickCount) === 0))
@@ -55,7 +47,7 @@ function drawStackedChart() {
     chart.append('g')
          .call(yAxis);
 
-    // add chart data
+    // 7. add data
     chart.selectAll('.bar')
          .data(stackedData)
          .join('g')
@@ -69,7 +61,7 @@ function drawStackedChart() {
          .attr('height', d => yScale(d[0]) - yScale(d[1]))
          .attr('width', xScale.bandwidth());
 
-    // add legend
+    // 9. make the chart fancier
     svg.append('g')
        .attr('transform', `translate(${margin.left},${margin.top + innerHeight + 50})`)
        .selectAll('g')
@@ -89,7 +81,7 @@ function drawStackedChart() {
             .text(d => d);
        });
 
-    // add tooltip
+    // 10. Add tooltip
     chart.selectAll("rect")
          .on("mousemove", function (event, d) {
              const barColor = d3.select(this).style("fill");
@@ -107,4 +99,5 @@ function drawStackedChart() {
              tooltip.style("opacity", 0);
              d3.select(this).style("fill-opacity", 1);
          });
+
 }

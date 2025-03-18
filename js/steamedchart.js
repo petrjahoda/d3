@@ -1,34 +1,29 @@
 function drawSteamChart() {
-    // clear chart
+    // 1. clear chart
     steamedChartContainer.selectAll("*").remove()
 
-    // parse and preprocess the data
+    // 2. prepare data
     const dates = stackedChartData[0]["Values"].map(item => item["Key"])
     const names = stackedChartData.map(item => item["Name"]);
     const data = dates.map(date => ({date, ...Object.fromEntries(stackedChartData.map(d => [d["Name"], d["Values"].find(v => v["Key"] === date)?.["Value"] || 0]))}));
+    const stackGenerator = d3.stack()
+                             .keys(names);
+    const stackedData = stackGenerator(data);
 
-    // create constants
+    // 3. create chart
     const margin = {top: 100, right: 100, bottom: 100, left: 100}
     const width = steamedChartContainer.node().getBoundingClientRect().width
     const height = 500
     const innerWidth = width - margin.left - margin.right
     const innerHeight = height - margin.top - margin.bottom
     const tickCount = Math.floor(innerWidth / 50)
-
-    // append svg to dom
     const svg = steamedChartContainer.append("svg")
                                      .attr("viewBox", [0, 0, width, height])
-
-    // create chart and append to dom
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
-    // generate data for stack
-    const stackGenerator = d3.stack()
-                             .keys(names);
-    const stackedData = stackGenerator(data);
 
-    // create scales
+    // 4. create scales
     const xScale = d3.scaleBand()
                      .domain(dates)
                      .range([0, innerWidth])
@@ -40,14 +35,14 @@ function drawSteamChart() {
     const colorScale = d3.scaleOrdinal(d3.schemeTableau10)
                          .domain(names);
 
-    // create area generator
-    const area = d3.area()
+    // 5. create data generator
+    const areaGenerator = d3.area()
                    .x(d => xScale(d.data.date) + xScale.bandwidth() / 2)
                    .y0(d => yScale(d[0]))
                    .y1(d => yScale(d[1]))
-                   .curve(d3.curveMonotoneX); // Makes the curve smoother
+                   .curve(d3.curveMonotoneX);
 
-    // add X axis
+    // 6. add X axis
     const xAxis = d3.axisBottom(xScale)
                     .tickFormat(d => d3.timeFormat('%b %d')(new Date(d)))
                     .tickValues(dates.filter((_, i) => i % Math.ceil(dates.length / tickCount) === 0))
@@ -60,16 +55,16 @@ function drawSteamChart() {
     chart.append('g')
          .call(yAxis);
 
-    // add chart data
+    // 7. add data
     chart.append('g')
          .attr('class', 'areas-container')
          .selectAll('path')
          .data(stackedData)
          .join('path')
-         .attr('d', area)
+         .attr('d', areaGenerator)
          .attr('fill', d => colorScale(d.key))
 
-    // add legend
+    // 9. make the chart fancier
     svg.append('g')
        .attr('transform', `translate(${margin.left},${margin.top + innerHeight + 50})`)
        .selectAll('g')
@@ -89,7 +84,7 @@ function drawSteamChart() {
             .text(d => d);
        });
 
-    // Add tooltip
+    // 10. Add tooltip
     chart.selectAll('path')
          .on("mousemove", function (event, d) {
              const hoveredDate = xScale.domain().find(date => Math.abs(xScale(date) + xScale.bandwidth() / 2 - d3.pointer(event, this)[0]) < xScale.bandwidth() / 2);
@@ -106,6 +101,4 @@ function drawSteamChart() {
          .on("mouseout", function () {
              tooltip.style("opacity", 0);
          });
-
-
 }

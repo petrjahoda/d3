@@ -1,8 +1,8 @@
 function drawBarChart() {
-    // clear chart
+    // 1. clear chart
     barChartContainer.selectAll("*").remove()
 
-    // create constants for chart
+    // 3. create chart
     const barHeight = 30
     const longestName = d3.max(barChartData["Data"], d => d["Name"].length)
     const margin = {top: 100, right: 100, bottom: 100, left: longestName * 8}
@@ -10,17 +10,13 @@ function drawBarChart() {
     const height = barHeight * barChartData["Data"].length
     const innerWidth = width - margin.left - margin.right
     const innerHeight = height - margin.top - margin.bottom
-
-
-    // append svg to dom
     const svg = barChartContainer.append("svg")
                                  .attr("viewBox", [0, 0, width, height])
-
-    // create chart and append to dom
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
+    const tickCount = Math.floor(innerWidth / 100)
 
-    // create scales
+    // 4. create scales
     const xScale = d3.scaleLinear()
                      .domain([0, d3.max(barChartData["Data"], d => d["Age"])])
                      .range([0, innerWidth])
@@ -30,15 +26,12 @@ function drawBarChart() {
                      .range([0, innerHeight])
                      .paddingInner(0.08)
 
-    // create axis with scales
-    let tickCount = Math.floor(innerWidth / 100)
+    // 5. add X axis
     const xAxis = d3.axisBottom(xScale)
                     .tickFormat(d => d + " let")
                     .ticks(tickCount)
     const yAxis = d3.axisLeft(yScale)
                     .tickSize(0)
-
-    // append axis to chart
     chart.append("g")
          .attr("transform", `translate(0, -20)`)
          .attr("class", "x-axis")
@@ -49,8 +42,6 @@ function drawBarChart() {
          .attr("font-weight", "500")
          .attr("font-size", "12px")
          .attr("transform", `translate(-2, 0)`)
-
-    //make axis fancier
     d3.select(".x-axis")
       .selectAll('path')
       .remove()
@@ -65,7 +56,7 @@ function drawBarChart() {
       .selectAll('path')
       .remove()
 
-    // append data to chart
+    // 6. add data
     chart.append("g")
          .selectAll(".bar")
          .data(barChartData["Data"])
@@ -78,7 +69,7 @@ function drawBarChart() {
          .attr("fill", d => d["Color"])
 
 
-    // append age labels to the end of every bar
+    // 7. make the chart fancier
     chart.selectAll(".label")
          .data(barChartData["Data"])
          .join("text")
@@ -88,8 +79,6 @@ function drawBarChart() {
          .attr("font-size", "10px")
          .attr("fill", "black")
          .attr("alignment-baseline", "middle");
-
-    // draw vertical grid lines through chart
     chart.selectAll(".grid-line")
          .data(xScale.ticks(tickCount))
          .join("line")
@@ -101,7 +90,7 @@ function drawBarChart() {
          .attr("stroke", "hsla(215, 12%, 15%, 0.2)")
          .attr("stroke-dasharray", "4,4");
 
-    // add interactivity
+    // 8. Add tooltip
     chart.selectAll("rect")
          .on("mouseover", function (event, d) {
              chart.selectAll("rect")

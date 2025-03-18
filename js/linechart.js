@@ -1,21 +1,20 @@
 function drawLineChart() {
-    // clear chart
+    // 1. clear chart
     lineChartContainer.selectAll("*").remove()
 
-    // create constants for chart
+    // 3. create chart
     const margin = {top: 100, right: 100, bottom: 100, left: 100}
     const width = lineChartContainer.node().getBoundingClientRect().width
     const height = 500
     const innerWidth = width - margin.left - margin.right
     const innerHeight = height - margin.top - margin.bottom
     let tickCount = Math.floor(innerWidth / 100)
-    // append svg to dom
     const svg = lineChartContainer.append("svg")
                                   .attr("viewBox", [0, 0, width, height])
-    // create chart and append to dom
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
-    // create scales
+
+    // 4. create scales
     const xScale = d3.scaleTime()
                      .domain([new Date(d3.min(lineChartData["Data"], d => d["Time"] * 1000)), new Date(d3.max(lineChartData["Data"], d => d["Time"] * 1000))])
                      .range([0, innerWidth])
@@ -23,7 +22,18 @@ function drawLineChart() {
                      .domain([0, d3.max(lineChartData["Data"], d => d["Value"])])
                      .range([innerHeight, 0])
                      .nice()
-    // create axis and append axis to chart
+
+    // OPTIONAL: resample data
+    let resampledData = resampleData(xScale.domain());
+
+    // 5. create data generator
+    const lineGenerator = d3.area()
+                            .x(d => xScale(new Date(d["Time"] * 1000)))
+                            .y0(innerHeight)
+                            .y1(d => yScale(d["Value"]))
+                            .curve(d3.curveMonotoneX)
+
+    // 6. add X axis
     const xAxis = d3.axisBottom(xScale)
                     .ticks(tickCount)
     const yAxis = d3.axisLeft(yScale)
@@ -38,56 +48,13 @@ function drawLineChart() {
          .attr("font-weight", "500")
          .attr("font-size", "12px")
 
-    // resample data
-    function resampleData(xDomain) {
-        const lowerBound = xDomain[0].getTime();
-        const upperBound = xDomain[1].getTime();
-        let filteredData = [];
-        for (let i = 0; i < lineChartData["Data"].length; i++) {
-            const point = lineChartData["Data"][i];
-            const timestamp = point["Time"] * 1000;
-            if (timestamp >= lowerBound && timestamp <= upperBound) {
-                filteredData.push(point);
-            }
-        }
-        if (filteredData.length <= innerWidth) {
-            return filteredData;
-        }
-        const step = (filteredData.length - 1) / (innerWidth - 1);
-        const result = new Array(innerWidth);
-        let resultIndex = 0;
-        for (let i = 0; i < innerWidth; i++) {
-            const exactIndex = i * step;
-            const lowerIndex = Math.floor(exactIndex);
-            const fraction = exactIndex - lowerIndex;
-            if (lowerIndex >= filteredData.length - 1) continue;
-            if (exactIndex === lowerIndex) {
-                result[resultIndex++] = filteredData[lowerIndex];
-            } else {
-                const lowerPoint = filteredData[lowerIndex];
-                const upperPoint = filteredData[lowerIndex + 1];
-                result[resultIndex++] = {
-                    Time: Math.round(lowerPoint["Time"] + fraction * (upperPoint["Time"] - lowerPoint["Time"])),
-                    Value: lowerPoint["Value"] + fraction * (upperPoint["Value"] - lowerPoint["Value"])
-                };
-            }
-        }
-        return result.slice(0, resultIndex);
-    }
-
-    let resampledData = resampleData(xScale.domain());
-    // generate and append line data
-    const lineGenerator = d3.area()
-                            .x(d => xScale(new Date(d["Time"] * 1000)))
-                            .y0(innerHeight)
-                            .y1(d => yScale(d["Value"]))
-                            .curve(d3.curveMonotoneX)
+    // 7. add data
     chart.append("path")
          .attr("d", lineGenerator(resampledData))
          .attr("fill", "hsla(355, 65%, 65%, 1.0)")
          .attr("stroke", "hsla(355, 65%, 65%, 1.0)")
 
-    // add tooltip data to overlay rectangle to capture mouse events over the entire chart area.
+    // 10. Add tooltip
     const bisectDate = d3.bisector(d => new Date(d["Time"] * 1000)).left;
     chart.append("rect")
          .attr("class", "overlay")
@@ -123,4 +90,40 @@ function drawLineChart() {
                     .duration(100)
                     .style("opacity", 0);
          });
+}
+
+function resampleData(xDomain) {
+    const lowerBound = xDomain[0].getTime();
+    const upperBound = xDomain[1].getTime();
+    let filteredData = [];
+    for (let i = 0; i < lineChartData["Data"].length; i++) {
+        const point = lineChartData["Data"][i];
+        const timestamp = point["Time"] * 1000;
+        if (timestamp >= lowerBound && timestamp <= upperBound) {
+            filteredData.push(point);
+        }
+    }
+    if (filteredData.length <= innerWidth) {
+        return filteredData;
+    }
+    const step = (filteredData.length - 1) / (innerWidth - 1);
+    const result = new Array(innerWidth);
+    let resultIndex = 0;
+    for (let i = 0; i < innerWidth; i++) {
+        const exactIndex = i * step;
+        const lowerIndex = Math.floor(exactIndex);
+        const fraction = exactIndex - lowerIndex;
+        if (lowerIndex >= filteredData.length - 1) continue;
+        if (exactIndex === lowerIndex) {
+            result[resultIndex++] = filteredData[lowerIndex];
+        } else {
+            const lowerPoint = filteredData[lowerIndex];
+            const upperPoint = filteredData[lowerIndex + 1];
+            result[resultIndex++] = {
+                Time: Math.round(lowerPoint["Time"] + fraction * (upperPoint["Time"] - lowerPoint["Time"])),
+                Value: lowerPoint["Value"] + fraction * (upperPoint["Value"] - lowerPoint["Value"])
+            };
+        }
+    }
+    return result.slice(0, resultIndex);
 }
