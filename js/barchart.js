@@ -65,6 +65,8 @@ function drawBarChart() {
          .attr("x", 0)
          .attr("y", d => yScale(d["Name"]))
          .attr("width", d => xScale(d["Age"]))
+         .transition()
+         .delay(1000)
          .attr("height", yScale.bandwidth())
          .attr("fill", d => d["Color"])
 
@@ -73,6 +75,8 @@ function drawBarChart() {
     chart.selectAll(".label")
          .data(barChartData["Data"])
          .join("text")
+         .transition()
+         .delay(1000)
          .text(d => d["Age"] + " let")
          .attr("x", d => xScale(d["Age"]) + 5)
          .attr("y", d => yScale(d["Name"]) + yScale.bandwidth() / 2)

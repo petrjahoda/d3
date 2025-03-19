@@ -37,10 +37,10 @@ function drawSteamChart() {
 
     // 5. create data generator
     const areaGenerator = d3.area()
-                   .x(d => xScale(d.data.date) + xScale.bandwidth() / 2)
-                   .y0(d => yScale(d[0]))
-                   .y1(d => yScale(d[1]))
-                   .curve(d3.curveMonotoneX);
+                            .x(d => xScale(d.data.date) + xScale.bandwidth() / 2)
+                            .y0(d => yScale(d[0]))
+                            .y1(d => yScale(d[1]))
+                            .curve(d3.curveMonotoneX);
 
     // 6. add X axis
     const xAxis = d3.axisBottom(xScale)
@@ -56,6 +56,8 @@ function drawSteamChart() {
          .call(yAxis);
 
     // 7. add data
+    // 9. make the chart fancier
+
     chart.append('g')
          .attr('class', 'areas-container')
          .selectAll('path')
@@ -63,26 +65,24 @@ function drawSteamChart() {
          .join('path')
          .attr('d', areaGenerator)
          .attr('fill', d => colorScale(d.key))
-
-    // 9. make the chart fancier
-    svg.append('g')
-       .attr('transform', `translate(${margin.left},${margin.top + innerHeight + 50})`)
-       .selectAll('g')
-       .data(names)
-       .join('g')
-       .attr('transform', (d, i) => `translate(${i * 121},0)`)
-       .call(g => {
-           g.append('rect')
-            .attr('width', 15)
-            .attr('height', 15)
-            .style('fill', d => colorScale(d));
-           g.append('text')
-            .attr('x', 20)
-            .attr('y', 12.6)
-            .attr('text-anchor', 'start')
-            .style('font-size', '12px')
-            .text(d => d);
-       });
+         .call(g => {
+             svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top + innerHeight + 50})`)
+                .selectAll('g')
+                .data(names)
+                .join('g')
+                .attr('transform', (d, i) => `translate(${i * 121},0)`)
+             g.append('rect')
+              .attr('width', 15)
+              .attr('height', 15)
+              .style('fill', d => colorScale(d));
+             g.append('text')
+              .attr('x', 20)
+              .attr('y', 12.6)
+              .attr('text-anchor', 'start')
+              .style('font-size', '12px')
+              .text(d => d);
+         });
 
     // 10. Add tooltip
     chart.selectAll('path')

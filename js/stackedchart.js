@@ -58,8 +58,11 @@ function drawStackedChart() {
          .join('rect')
          .attr('x', d => xScale(d.data.date))
          .attr('y', d => yScale(d[1]))
+         .attr('width', xScale.bandwidth())
+         .transition()
+         .delay(1000)
          .attr('height', d => yScale(d[0]) - yScale(d[1]))
-         .attr('width', xScale.bandwidth());
+
 
     // 9. make the chart fancier
     svg.append('g')
