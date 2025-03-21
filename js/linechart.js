@@ -13,7 +13,6 @@ function drawLineChart() {
                                   .attr("viewBox", [0, 0, width, height])
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
-
     // 4. create scales
     const xScale = d3.scaleTime()
                      .domain([new Date(d3.min(lineChartData["Data"], d => d["Time"] * 1000)), new Date(d3.max(lineChartData["Data"], d => d["Time"] * 1000))])
@@ -26,12 +25,20 @@ function drawLineChart() {
     // OPTIONAL: resample data
     let resampledData = resampleData(xScale.domain());
 
-    // 5. create data generator
+    // 5. create data generator and handle breaks in data
+    let ratio = lineChartData["Data"].length / resampledData.length
     const lineGenerator = d3.area()
+                            .defined((d, i, data) => {
+                                if (i === 0) return true;
+                                const prevTime = data[i - 1]["Time"];
+                                const currTime = d["Time"];
+                                return (currTime - prevTime) <= (11 * ratio);
+                            })
                             .x(d => xScale(new Date(d["Time"] * 1000)))
                             .y0(innerHeight)
                             .y1(d => yScale(d["Value"]))
-                            .curve(d3.curveMonotoneX)
+                            .curve(d3.curveMonotoneX);
+
 
     // 6. add X axis
     const xAxis = d3.axisBottom(xScale)
@@ -108,6 +115,28 @@ function drawLineChart() {
                     .style("opacity", 0);
          });
 }
+
+function splitByGaps(data, thresholdMs = 11000) {
+    if (!data || data.length === 0) return [];
+    const segments = [];
+    let currentSegment = [data[0]];
+
+    for (let i = 1; i < data.length; i++) {
+        const currTime = new Date(data[i]["Time"] * 1000);
+        const prevTime = new Date(data[i - 1]["Time"] * 1000);
+        // if the gap is larger than the threshold, start a new segment
+        if (currTime - prevTime > thresholdMs) {
+            segments.push(currentSegment);
+            currentSegment = [];
+        }
+        currentSegment.push(data[i]);
+    }
+    if (currentSegment.length) {
+        segments.push(currentSegment);
+    }
+    return segments;
+}
+
 
 function resampleData(xDomain) {
     const lowerBound = xDomain[0].getTime();

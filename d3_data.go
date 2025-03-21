@@ -144,11 +144,12 @@ func d3StackedChartData(writer http.ResponseWriter, request *http.Request) {
 
 func d3LineChartData(writer http.ResponseWriter, request *http.Request) {
 	oneYearData := 3000000
-	//oneYearData := 30
 	initialDate := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	d3LineData := make([]D3LineData, oneYearData)
+	var d3LineData []D3LineData
 	for i := 0; i < oneYearData; i++ {
-		d3LineData[i] = D3LineData{uint32(initialDate.Unix()), float32(rand.Float64() * 100)}
+		if i < 123456 || i > 654321 {
+			d3LineData = append(d3LineData, D3LineData{uint32(initialDate.Unix()), float32(rand.Float64() * 100)})
+		}
 		initialDate = initialDate.Add(10 * time.Second)
 	}
 	d3DataResult := D3LineDataResult{
