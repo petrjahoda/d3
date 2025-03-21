@@ -22,6 +22,8 @@ const tooltip = d3.select("body")
                   .style("opacity", 0);
 
 
+
+
 fetch("/d3_bar_chart_data", {
     method: "POST", headers: {'Content-Type': 'application/json'}
 }).then(response => response.json().then(data => {

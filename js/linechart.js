@@ -55,6 +55,18 @@ function drawLineChart() {
          .attr("stroke", "hsla(355, 65%, 65%, 1.0)")
 
     // 10. Add tooltip
+    const verticalLine = chart.append("g")
+                              .attr("class", "vertical-line")
+                              .style("opacity", 0);
+
+    // Add the vertical line
+    verticalLine.append("line")
+                .attr("y1", 0)
+                .attr("y2", innerHeight)
+                .attr("stroke", "#666")
+                .attr("stroke-width", 1)
+                .attr("stroke-dasharray", "5,5");
+
     const bisectDate = d3.bisector(d => new Date(d["Time"] * 1000)).left;
     chart.append("rect")
          .attr("class", "overlay")
@@ -72,6 +84,10 @@ function drawLineChart() {
              if (d1 && x0 - new Date(d0["Time"] * 1000) > new Date(d1["Time"] * 1000) - x0) {
                  d = d1;
              }
+             const lineX = xScale(new Date(d["Time"] * 1000));
+             verticalLine.style("opacity", 1)
+                         .attr("transform", `translate(${lineX},0)`);
+
              tooltip.transition()
                     .duration(100)
                     .style("opacity", 0.9);
@@ -86,6 +102,7 @@ function drawLineChart() {
                     .style("transform", "translate(-50%, -100%)");
          })
          .on("mouseout", () => {
+             verticalLine.style("opacity", 0)
              tooltip.transition()
                     .duration(100)
                     .style("opacity", 0);

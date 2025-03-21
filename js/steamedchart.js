@@ -84,21 +84,38 @@ function drawSteamChart() {
               .text(d => d);
          });
 
+
+
+
     // 10. Add tooltip
+    const verticalLine = chart.append('g')
+                              .attr('class', 'vertical-line')
+                              .style('opacity', 0);
+    verticalLine.append('line')
+                .attr('y1', 0)
+                .attr('y2', innerHeight)
+                .attr('stroke', '#999')
+                .attr('stroke-width', 1)
+                .attr('stroke-dasharray', '5,5');
     chart.selectAll('path')
          .on("mousemove", function (event, d) {
              const hoveredDate = xScale.domain().find(date => Math.abs(xScale(date) + xScale.bandwidth() / 2 - d3.pointer(event, this)[0]) < xScale.bandwidth() / 2);
              if (hoveredDate) {
                  const hoveredValue = d.find(segment => segment.data.date === hoveredDate);
+                 const xPos = xScale(hoveredDate) + xScale.bandwidth() / 2;
                  if (hoveredValue) {
                      tooltip.style("opacity", 1)
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 10) + "px")
-                            .html(`<span style="font-weight:500">${d.key}</span><br>Date: ${hoveredDate}<br>Value: ${(hoveredValue[1] - hoveredValue[0]).toPrecision(3)}`);
+                            .html(`<span style="font-weight:500">${d.key}</span><br>Date: ${hoveredDate}<br>Value: ${(hoveredValue[1] - hoveredValue[0]).toPrecision(3)}`)
+                     verticalLine
+                         .style('opacity', 1)
+                         .attr('transform', `translate(${xPos}, 0)`);
                  }
              }
          })
          .on("mouseout", function () {
              tooltip.style("opacity", 0);
+             verticalLine.style('opacity', 0);
          });
 }
