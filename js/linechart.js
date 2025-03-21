@@ -26,13 +26,14 @@ function drawLineChart() {
     let resampledData = resampleData(xScale.domain());
 
     // 5. create data generator and handle breaks in data
-    let ratio = lineChartData["Data"].length / resampledData.length
+    const chartGapRatio = lineChartData["Data"].length / resampledData.length
+    const gapSeconds = 11
     const lineGenerator = d3.area()
                             .defined((d, i, data) => {
                                 if (i === 0) return true;
                                 const prevTime = data[i - 1]["Time"];
                                 const currTime = d["Time"];
-                                return (currTime - prevTime) <= (11 * ratio);
+                                return (currTime - prevTime) <= (gapSeconds * chartGapRatio);
                             })
                             .x(d => xScale(new Date(d["Time"] * 1000)))
                             .y0(innerHeight)
