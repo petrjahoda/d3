@@ -2,9 +2,11 @@ function drawBarChart() {
     // 1. clear chart
     barChartContainer.selectAll("*").remove()
 
-    // 3. create chart
+    // 2. prepare data
     const barHeight = 30
     const longestName = d3.max(barChartData["Data"], d => d["Name"].length)
+
+    // 3. create chart
     const margin = {top: 100, right: 100, bottom: 100, left: longestName * 8}
     const width = barChartContainer.node().getBoundingClientRect().width
     const height = barHeight * barChartData["Data"].length
@@ -14,7 +16,7 @@ function drawBarChart() {
                                  .attr("viewBox", [0, 0, width, height])
     const chart = svg.append("g")
                      .attr("transform", `translate(${margin.left}, ${margin.top})`)
-    const tickCount = Math.floor(innerWidth / 100)
+
 
     // 4. create scales
     const xScale = d3.scaleLinear()
@@ -27,6 +29,7 @@ function drawBarChart() {
                      .paddingInner(0.08)
 
     // 5. add X axis
+    const tickCount = Math.floor(innerWidth / 100)
     const xAxis = d3.axisBottom(xScale)
                     .tickFormat(d => d + " let")
                     .ticks(tickCount)
