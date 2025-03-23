@@ -101,18 +101,12 @@ function drawBarChart() {
     chart.selectAll("rect")
          .on("mouseover", function (event, d) {
              chart.selectAll("rect")
-                  .transition()
-                  .duration(500)
                   .style("opacity", 0.5);
              d3.select(this)
-               .transition()
-               .duration(200)
                .style("opacity", 1);
          })
          .on("mouseout", function () {
              chart.selectAll("rect")
-                  .transition()
-                  .duration(500)
                   .style("opacity", 1);
          });
 }
